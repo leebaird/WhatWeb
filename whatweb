@@ -54,10 +54,9 @@ local_bundle = [
   File.join(WHATWEB_ROOT, 'path')
 ].any? { |dir| File.directory?(dir) }
 local_bundle ||= File.file?(bundle_config)
-local_bundle ||= ENV.key?('BUNDLE_PATH') || ENV.key?('BUNDLE_GEMFILE')
 if local_bundle && File.file?(File.join(WHATWEB_ROOT, 'Gemfile'))
   begin
-    ENV['BUNDLE_GEMFILE'] ||= File.join(WHATWEB_ROOT, 'Gemfile')
+    ENV['BUNDLE_GEMFILE'] = File.join(WHATWEB_ROOT, 'Gemfile')
     require 'bundler/setup'
   rescue LoadError, StandardError
     # Bundler is optional; lib/gems.rb still checks required gems.
