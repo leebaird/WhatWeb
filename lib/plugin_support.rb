@@ -134,10 +134,11 @@ class PluginSupport
       if File.directory?(d)
         (Dir.glob("#{d}/*.rb") - minus_files).each { |x| PluginSupport.load_plugin(x) }
       elsif File.exist?(d)
-        before = Plugin.registered_plugins.dup
+        before_ids = {}
+        Plugin.registered_plugins.each { |name, plugin| before_ids[name] = plugin.object_id }
         PluginSupport.load_plugin(d)
         Plugin.registered_plugins.each do |name, plugin|
-          plugins_from_files << name.downcase if before[name] != plugin
+          plugins_from_files << name.downcase if before_ids[name] != plugin.object_id
         end
       else
         error("Error: #{d} is not Dir or File")
