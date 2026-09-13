@@ -549,8 +549,7 @@ begin
       $AGGRESSION = arg.to_i
     when '--proxy'
       $USE_PROXY = true
-      $PROXY_HOST = arg.to_s.split(':')[0]
-      $PROXY_PORT = arg.to_s.split(':')[1].to_i if arg.to_s.include?(':')
+      $PROXY_HOST, $PROXY_PORT = Helper.parse_host_port(arg, $PROXY_PORT)
     when '--proxy-user'
       $PROXY_USER = arg.to_s.split(':')[0]
       $PROXY_PASS = arg.to_s.scan(/^[^:]*:(.+)/).to_s if arg =~ /^[^:]*:(.+)/

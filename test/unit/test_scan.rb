@@ -69,6 +69,24 @@ class WhatWebTest < Minitest::Test
     end
   end
 
+  def test_parse_proxy_ipv6_bracketed
+    host, port = Helper.parse_host_port('[::1]:8080', 8080)
+    assert_equal('::1', host)
+    assert_equal(8080, port)
+  end
+
+  def test_parse_proxy_ipv6_bracketed_default_port
+    host, port = Helper.parse_host_port('[2001:db8::1]', 8080)
+    assert_equal('2001:db8::1', host)
+    assert_equal(8080, port)
+  end
+
+  def test_parse_proxy_ipv4_host_port
+    host, port = Helper.parse_host_port('127.0.0.1:3128', 8080)
+    assert_equal('127.0.0.1', host)
+    assert_equal(3128, port)
+  end
+
   def test_scanner
     scanner = WhatWeb::Scan.new(@test_host)
     assert(scanner)

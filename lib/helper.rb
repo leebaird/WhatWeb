@@ -100,4 +100,31 @@ module Helper
     ret << line unless line.empty?
     ret
   end
+
+  # Parse host[:port] including [IPv6]:port. Returns [host, port].
+  # Host is stored without brackets. Port is default_port when omitted.
+  def self.parse_host_port(arg, default_port)
+    s = arg.to_s.strip
+    raise "Invalid host:port #{arg.inspect}" if s.empty?
+
+    if s =~ /\A\[([^\]]+)\](?::(\d+))?\z/
+      return [Regexp.last_match(1), (Regexp.last_match(2) || default_port).to_i]
+    end
+
+    if s.count(':') > 1
+      if s =~ /\A(.+):(\d+)\z/
+        prefix = Regexp.last_match(1)
+        port = Regexp.last_match(2).to_i
+        begin
+          return [prefix, port] if IPAddr.new(prefix).ipv6?
+        rescue StandardError
+          nil
+        end
+      end
+      return [s, default_port.to_i]
+    end
+
+    host, port = s.split(':', 2)
+    [host, port ? port.to_i : default_port.to_i]
+  end
 end
