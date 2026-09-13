@@ -15,6 +15,9 @@ gem 'addressable'
 # JSON logging
 gem 'json'
 
+# CLI option parsing. Removed from the default gems in Ruby 3.4.
+gem 'getoptlong'
+
 # MongoDB logging - optional
 # To use: bundle install --with mongo
 group :mongo, optional: true do

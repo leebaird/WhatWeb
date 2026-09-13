@@ -19,7 +19,13 @@
 # require 'profile' # debugging
 
 # Standard Ruby
-require 'getoptlong'
+begin
+  require 'getoptlong'
+rescue LoadError
+  abort "cannot load such file -- getoptlong (LoadError)\n" \
+        "Ruby 3.4+ no longer ships getoptlong as a default gem.\n" \
+        "Install it with: gem install getoptlong"
+end
 require 'net/http'
 require 'open-uri'
 require 'cgi'
