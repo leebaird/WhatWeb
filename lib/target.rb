@@ -350,32 +350,30 @@ class Target
 
       req.basic_auth $BASIC_AUTH_USER, $BASIC_AUTH_PASS if $BASIC_AUTH_USER
 
-      # Log HTTP request details for debug mode
-      request_details = []
-      request_details << "\n" + "=" * 60
-      request_details << "HTTP REQUEST"
-      request_details << "=" * 60
-      request_details << "#{options[:method]} #{getthis} HTTP/1.1"
-      request_details << "Host: #{@uri.host}#{@uri.port != (@uri.scheme == 'https' ? 443 : 80) ? ":#{@uri.port}" : ''}"
-      
-      # Show custom headers
-      headers.each do |key, value|
-        request_details << "#{key}: #{value}"
+      if $verbose && $verbose > 2
+        request_details = []
+        request_details << "\n" + "=" * 60
+        request_details << "HTTP REQUEST"
+        request_details << "=" * 60
+        request_details << "#{options[:method]} #{getthis} HTTP/1.1"
+        request_details << "Host: #{@uri.host}#{@uri.port != (@uri.scheme == 'https' ? 443 : 80) ? ":#{@uri.port}" : ''}"
+
+        headers.each do |key, value|
+          request_details << "#{key}: #{value}"
+        end
+
+        if $BASIC_AUTH_USER
+          request_details << "Authorization: Basic [REDACTED]"
+        end
+
+        if options[:method] == 'POST' && options[:data]
+          request_details << "\n[POST Data]"
+          request_details << options[:data].inspect
+        end
+        request_details << "=" * 60
+
+        debug(request_details.join("\n"))
       end
-      
-      # Show basic auth header if present
-      if $BASIC_AUTH_USER
-        request_details << "Authorization: Basic [REDACTED]"
-      end
-      
-      # Show POST data if present
-      if options[:method] == 'POST' && options[:data]
-        request_details << "\n[POST Data]"
-        request_details << options[:data].inspect
-      end
-      request_details << "=" * 60
-      
-      debug(request_details.join("\n"))
 
       res = http.request(req)
       @raw_headers = http.raw.join("\n")
@@ -406,22 +404,22 @@ class Target
       end
 
       @status = res.code.to_i
-      
-      # Log HTTP response details for debug mode
-      response_details = []
-      response_details << "\nHTTP RESPONSE"
-      response_details << "=" * 60
-      response_details << "HTTP/1.1 #{@status} #{res.message}"
-      res.each_header do |key, value|
-        response_details << "#{key}: #{value}"
+
+      if $verbose && $verbose > 2
+        response_details = []
+        response_details << "\nHTTP RESPONSE"
+        response_details << "=" * 60
+        response_details << "HTTP/1.1 #{@status} #{res.message}"
+        res.each_header do |key, value|
+          response_details << "#{key}: #{value}"
+        end
+        response_details << "=" * 60
+        response_details << "Response body length: #{@body ? @body.length : 0} bytes"
+        response_details << "=" * 60 + "\n"
+
+        debug(response_details.join("\n"))
+        debug("#{@uri} [#{@status}]")
       end
-      response_details << "=" * 60
-      response_details << "Response body length: #{@body ? @body.length : 0} bytes"
-      response_details << "=" * 60 + "\n"
-      
-      debug(response_details.join("\n"))
-      
-      debug("#{@uri} [#{status}]")
 
     rescue StandardError => err
       raise err
