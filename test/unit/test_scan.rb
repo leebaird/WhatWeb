@@ -74,6 +74,28 @@ class WhatWebTest < Minitest::Test
     assert(scanner)
   end
 
+  def targets_for(input)
+    WhatWeb::Scan.new(input).instance_variable_get(:@targets)
+  end
+
+  def test_ipv6_with_port_is_not_dual_scanned
+    targets = targets_for('[::1]:8080')
+    assert(targets.any? { |u| u.start_with?('http://[::1]:8080') })
+    refute(targets.any? { |u| u.start_with?('https://') })
+  end
+
+  def test_ipv4_with_port_is_not_dual_scanned
+    targets = targets_for('192.168.1.1:8080')
+    assert(targets.any? { |u| u.start_with?('http://192.168.1.1:8080') })
+    refute(targets.any? { |u| u.start_with?('https://') })
+  end
+
+  def test_bracketed_ipv6_without_port_is_dual_scanned
+    targets = targets_for('[::1]')
+    assert(targets.any? { |u| u.start_with?('http://[::1]') })
+    assert(targets.any? { |u| u.start_with?('https://[::1]') })
+  end
+
   def test_scan
     max_redirects = 5
     plugins = PluginSupport.load_plugins

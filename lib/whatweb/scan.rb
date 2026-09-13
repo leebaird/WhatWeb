@@ -265,8 +265,11 @@ module WhatWeb
             ipv6 = x.count(':') >= 2 && x !~ %r{/}
             x = "[#{x}]" if ipv6 && !x.start_with?('[')
 
-            # If target is a simple hostname with no scheme, create both HTTP and HTTPS targets
-            if x !~ %r{/} && (ipv6 || x !~ %r{:})
+            # Dual-scan HTTP+HTTPS only when there is no path and no explicit port.
+            # [2001:db8::1]:8080 has colons but is not a "simple hostname".
+            has_port = x.match?(/\A\[[^\]]+\]:\d+\z/) || x.match?(/\A[^\[\/:]+:\d+\z/)
+
+            if x !~ %r{/} && !has_port
               original_hostname = x.dup
               https_version = "https://#{x}"
               push_to_urllist << https_version
