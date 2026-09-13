@@ -543,6 +543,7 @@ begin
       $USER_AGENT = arg
     when '-t', '--max-threads'
       max_threads = arg.to_i
+      raise('--max-threads must be at least 1') if max_threads < 1
     when '-a', '--aggression'
       raise "Agression level must be 1,3, or 4. #{arg} is invalid." unless [1, 3, 4].include? arg.to_i
 

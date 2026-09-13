@@ -33,7 +33,8 @@ module WhatWeb
 
       error('No targets selected') if @targets.empty?
 
-      @max_threads = max_threads.to_i || 25
+      @max_threads = max_threads.to_i
+      @max_threads = 25 if @max_threads < 1
       @target_queue = Queue.new # workers consume from this
     end
 
