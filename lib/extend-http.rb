@@ -29,6 +29,15 @@ class ExtendedHTTP < Net::HTTP #:nodoc:
     raise
   end
 
+  def apply_legacy_ssl!(ssl_context)
+    if defined?(OpenSSL::SSL::OP_LEGACY_SERVER_CONNECT)
+      ssl_context.options |= OpenSSL::SSL::OP_LEGACY_SERVER_CONNECT
+    end
+    if defined?(OpenSSL::SSL::OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION)
+      ssl_context.options |= OpenSSL::SSL::OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION
+    end
+  end
+
   # Creates a new Net::HTTP object for the specified server address,
   # without opening the TCP connection or initializing the HTTP session.
   # The +address+ should be a DNS hostname or IP address.
@@ -121,6 +130,7 @@ class ExtendedHTTP < Net::HTTP #:nodoc:
       @ssl_context = OpenSSL::SSL::SSLContext.new
       @ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
       apply_client_cert!(@ssl_context)
+      apply_legacy_ssl!(@ssl_context)
       
       # Configure SSL context for maximum compatibility with ALL protocols
       begin
@@ -179,6 +189,7 @@ class ExtendedHTTP < Net::HTTP #:nodoc:
       @ssl_context = OpenSSL::SSL::SSLContext.new
       @ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
       apply_client_cert!(@ssl_context)
+      apply_legacy_ssl!(@ssl_context)
       
       # Configure SSL context for maximum compatibility with ALL protocols
       begin
