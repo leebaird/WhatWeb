@@ -34,7 +34,9 @@ install:
 	cp -p -r my-plugins $(DESTDIR)$(LIBPATH)/$(NAME)/
 	cp -p -r plugins-disabled plugins lib plugin-development addons $(DESTDIR)$(LIBPATH)/$(NAME)/
 	cp -p -r CHANGELOG.md INSTALL.md LICENSE README.md whatweb.xsl $(DESTDIR)$(DOCPATH)/$(NAME)/
-	bundle install
+	# Skip test/development gems (rdoc/psych) so a runtime install does not
+	# fail on missing libyaml headers. See upstream issue #388.
+	BUNDLE_WITHOUT=development:test bundle install
 
 clean:
 	# clean will remove your my-plugins folder. be warned
