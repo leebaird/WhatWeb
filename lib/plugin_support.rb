@@ -108,8 +108,11 @@ class PluginSupport
     # sort by neither, add, minus
     a = a.sort
 
-    # plugin_dirs gets wiped out if no modifier is used on a file/folder
-    plugin_dirs = [] if a.map(&:modifier).include?(nil)
+    # plugin_dirs gets wiped out if no modifier is used on a file/folder.
+    # Keep default dirs when plugin names with no modifier must still be resolved
+    # (e.g. -p title,plugins/robots.txt.rb). Upstream #42.
+    names_need_defaults = b.map(&:modifier).include?(nil)
+    plugin_dirs = [] if a.map(&:modifier).include?(nil) && !names_need_defaults
 
     minus_files = [] # make list of files not to load
     a.map do |c|
@@ -125,12 +128,17 @@ class PluginSupport
     # pp Plugin.registered_plugins.size
 
     # load files from plugin_dirs unless a file is minused
+    plugins_from_files = []
     plugin_dirs.each do |d|
       # if a folder, then load all files
       if File.directory?(d)
         (Dir.glob("#{d}/*.rb") - minus_files).each { |x| PluginSupport.load_plugin(x) }
       elsif File.exist?(d)
+        before = Plugin.registered_plugins.dup
         PluginSupport.load_plugin(d)
+        Plugin.registered_plugins.each do |name, plugin|
+          plugins_from_files << name.downcase if before[name] != plugin
+        end
       else
         error("Error: #{d} is not Dir or File")
       end
@@ -153,6 +161,9 @@ class PluginSupport
       selected_plugin_names << c.name if c.modifier.nil? || c.modifier == '+'
       selected_plugin_names -= [c.name] if c.modifier == '-'
     end
+
+    plugins_from_files.each { |n| selected_plugin_names << n }
+    selected_plugin_names.uniq!
 
     # pp selected_plugin_names
     # Plugin.registered_plugins is getting wiped out
