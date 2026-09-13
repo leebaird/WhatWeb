@@ -32,20 +32,40 @@
 # You should have received a copy of the GNU General Public License
 # along with WhatWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-# Use gems from vendor/bundle when present (upstream PR #435).
-# Only activate Bundler in that case: a bare `bundler/setup` fails when
-# optional Gemfile groups (mongo, test) are not installed.
-vendor_bundle = File.join(File.expand_path(__dir__), 'vendor', 'bundle')
-if File.directory?(vendor_bundle)
+# Installation root: git tree, Makefile symlink, or a copy of this file in bindir.
+# require_relative breaks when /usr/bin/whatweb is a copy of the script (upstream #428).
+script_path = begin
+  File.realpath(__FILE__)
+rescue StandardError
+  File.expand_path(__FILE__)
+end
+script_dir = File.dirname(script_path)
+WHATWEB_ROOT = [
+  script_dir,
+  File.expand_path('../share/whatweb', script_dir),
+  '/usr/local/share/whatweb',
+  '/usr/share/whatweb'
+].uniq.find { |dir| File.file?(File.join(dir, 'lib', 'whatweb.rb')) } || script_dir
+
+# Use gems from a local bundle when present (upstream #320 / #435).
+bundle_config = File.join(WHATWEB_ROOT, '.bundle', 'config')
+local_bundle = [
+  File.join(WHATWEB_ROOT, 'vendor', 'bundle'),
+  File.join(WHATWEB_ROOT, 'path')
+].any? { |dir| File.directory?(dir) }
+local_bundle ||= File.file?(bundle_config)
+local_bundle ||= ENV.key?('BUNDLE_PATH') || ENV.key?('BUNDLE_GEMFILE')
+if local_bundle && File.file?(File.join(WHATWEB_ROOT, 'Gemfile'))
   begin
-    ENV['BUNDLE_GEMFILE'] ||= File.join(File.expand_path(__dir__), 'Gemfile')
+    ENV['BUNDLE_GEMFILE'] ||= File.join(WHATWEB_ROOT, 'Gemfile')
     require 'bundler/setup'
   rescue LoadError, StandardError
     # Bundler is optional; lib/gems.rb still checks required gems.
   end
 end
 
-$LOAD_PATH.unshift(File.join(File.expand_path(__dir__)), '.')
+$LOAD_PATH.unshift(WHATWEB_ROOT)
+$LOAD_PATH.unshift(File.join(WHATWEB_ROOT, 'lib'))
 
 # Performance profiling infrastructure (Phase 1)
 if ENV['WHATWEB_PROFILE']
@@ -68,7 +88,7 @@ if ENV['WHATWEB_PROFILE']
   end
 end
 
-require 'lib/whatweb'
+require File.join(WHATWEB_ROOT, 'lib', 'whatweb')
 
 #
 # Command-line usage information (full)
@@ -298,7 +318,7 @@ else
 end
 
 # Load message handling functions
-require_relative 'lib/messages'
+require File.join(WHATWEB_ROOT, 'lib', 'messages')
 
 #
 # Check for cookie performance warnings based on thread count
@@ -709,7 +729,7 @@ $CUSTOM_HEADERS.delete_if { |_k, v| v == '' }
 
 ## Cookie Jar Initialization
 unless $NO_COOKIES
-  require_relative 'lib/simple_cookie_jar'
+  require File.join(WHATWEB_ROOT, 'lib', 'simple_cookie_jar')
   $COOKIE_JAR = SimpleCookieJar.new(max_domains: 10_000, cookie_jar_file: cookie_jar_file)
   
   # Warn about performance implications
