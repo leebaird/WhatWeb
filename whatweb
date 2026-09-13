@@ -674,6 +674,20 @@ if defined?($CLIENT_CERT_FILE) && $CLIENT_CERT_FILE && $CLIENT_KEY_FILE.to_s.emp
   exit 1
 end
 
+if defined?($CLIENT_CERT_FILE) && $CLIENT_CERT_FILE
+  begin
+    pems = File.read($CLIENT_CERT_FILE).scan(/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/m)
+    raise "No certificate in #{$CLIENT_CERT_FILE}" if pems.empty?
+
+    $CLIENT_CERT = OpenSSL::X509::Certificate.new(pems.first)
+    $CLIENT_CERT_CHAIN = pems.drop(1).map { |pem| OpenSSL::X509::Certificate.new(pem) }
+    $CLIENT_KEY = OpenSSL::PKey.read(File.read($CLIENT_KEY_FILE), $CLIENT_KEY_PASS)
+  rescue StandardError => e
+    error "ERROR loading client certificate/key: #{e.message}"
+    exit 1
+  end
+end
+
 ### PLUGINS
 plugin_selection += ',+Custom-Plugin'	if use_custom_plugin && plugin_selection
 plugin_selection += ',+Grep'	if use_custom_grep_plugin && plugin_selection

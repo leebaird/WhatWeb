@@ -20,6 +20,15 @@ class ExtendedHTTP < Net::HTTP #:nodoc:
   SSL_ATTRIBUTES = [ :verify_mode ]
 
   def apply_client_cert!(ssl_context)
+    if defined?($CLIENT_CERT) && $CLIENT_CERT
+      ssl_context.cert = $CLIENT_CERT
+      ssl_context.key  = $CLIENT_KEY
+      if defined?($CLIENT_CERT_CHAIN) && $CLIENT_CERT_CHAIN && !$CLIENT_CERT_CHAIN.empty?
+        ssl_context.extra_chain_cert = $CLIENT_CERT_CHAIN
+      end
+      return
+    end
+
     return unless defined?($CLIENT_CERT_FILE) && $CLIENT_CERT_FILE
 
     ssl_context.cert = OpenSSL::X509::Certificate.new(File.read($CLIENT_CERT_FILE))
