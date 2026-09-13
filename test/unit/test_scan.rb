@@ -107,6 +107,14 @@ class WhatWebTest < Minitest::Test
     assert_equal(3128, port)
   end
 
+  def test_ten_parse_errors_do_not_nil_the_target_list
+    previous = defined?($NO_ERRORS) ? $NO_ERRORS : nil
+    $NO_ERRORS = true
+    WhatWeb::Scan.new(Array.new(10, '::::not-a-url'))
+  ensure
+    $NO_ERRORS = previous
+  end
+
   def test_scanner
     scanner = WhatWeb::Scan.new(@test_host)
     assert(scanner)

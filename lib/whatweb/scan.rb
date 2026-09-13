@@ -275,69 +275,53 @@ module WhatWeb
       inputfile_name = opts[:input_file] # Store for error messages
       
       # TODO: refactor this
-      url_list = url_list.map do |x|
+      parsed = []
+      url_list.each do |x|
         if File.exist?(x)
-          consecutive_errors = 0 # Reset counter on success
-          x
-        else
-          # use url pattern
-          x = opts[:url_pattern].gsub('%insert%', x) unless opts[:url_pattern].to_s.eql?('')
-          # add prefix & suffix
-          x = "#{opts[:url_prefix]}#{x}#{opts[:url_suffix]}"
+          consecutive_errors = 0
+          parsed << x
+          next
+        end
 
-          # need to move this into a URI parsing function
-          #
-          # check for URI prefix
-          if x !~ %r{^[a-z]+://}
-            x = bracket_ipv6_target(x)
+        x = opts[:url_pattern].gsub('%insert%', x) unless opts[:url_pattern].to_s.eql?('')
+        x = "#{opts[:url_prefix]}#{x}#{opts[:url_suffix]}"
 
-            # Dual-scan HTTP+HTTPS only when there is no path and no explicit port.
-            # [2001:db8::1]:8080 has colons but is not a "simple hostname".
-            has_port = x.match?(/\A\[[^\]]+\]:\d+\z/) || x.match?(/\A[^\[\/:]+:\d+\z/)
+        if x !~ %r{^[a-z]+://}
+          x = bracket_ipv6_target(x)
 
-            if x !~ %r{/} && !has_port
-              original_hostname = x.dup
-              https_version = "https://#{x}"
-              push_to_urllist << https_version
-              x.sub!(/^/, 'http://')
-              debug("Simple hostname detected: #{original_hostname}. Testing both HTTP and HTTPS.")
-            else
-              x.sub!(/^/, 'http://')
-            end
+          # Dual-scan HTTP+HTTPS only when there is no path and no explicit port.
+          has_port = x.match?(/\A\[[^\]]+\]:\d+\z/) || x.match?(/\A[^\[\/:]+:\d+\z/)
+
+          if x !~ %r{/} && !has_port
+            original_hostname = x.dup
+            push_to_urllist << "https://#{x}"
+            x.sub!(/^/, 'http://')
+            debug("Simple hostname detected: #{original_hostname}. Testing both HTTP and HTTPS.")
+          else
+            x.sub!(/^/, 'http://')
           end
+        end
 
-          # is it a valid domain?
-          begin
-            domain = Addressable::URI.parse(x)
-            # check validity
-            raise 'Unable to parse invalid target. No hostname.' if domain.host.empty?
+        begin
+          domain = Addressable::URI.parse(x)
+          raise 'Unable to parse invalid target. No hostname.' if domain.host.empty?
 
-            # convert IDN domain
-            x = domain.normalize.to_s if domain.host !~ %r{^[a-zA-Z0-9\.:/]*$}
-            
-            # Reset counter on successful parse
-            consecutive_errors = 0
-          rescue => e
-            # Count consecutive errors
-            consecutive_errors += 1
-            
-            # Abort after 10 consecutive parsing errors
-            if consecutive_errors >= 10
-              error("Aborting target processing after #{consecutive_errors} consecutive parsing errors.")
-              error("The input appears to contain invalid URLs or non-URL data.")
-              error("Please check your input and ensure it contains valid URLs.")
-              break
-            end
-            
-            # if it fails it's not valid
-            x = nil
-            # Print the error message
-            error("Unable to parse invalid target #{x}: #{e}")
+          x = domain.normalize.to_s if domain.host !~ %r{^[a-zA-Z0-9\.:/]*$}
+          consecutive_errors = 0
+          parsed << x
+        rescue => e
+          consecutive_errors += 1
+          error("Unable to parse invalid target #{x}: #{e}")
+
+          if consecutive_errors >= 10
+            error("Aborting target processing after #{consecutive_errors} consecutive parsing errors.")
+            error("The input appears to contain invalid URLs or non-URL data.")
+            error("Please check your input and ensure it contains valid URLs.")
+            break
           end
-          # return x
-          x
         end
       end
+      url_list = parsed
 
       url_list += push_to_urllist unless push_to_urllist.empty?
 
