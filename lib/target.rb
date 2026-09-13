@@ -263,14 +263,31 @@ class Target
     raise err
   end
 
+  def peer_hostname
+    (@uri.respond_to?(:hostname) ? @uri.hostname : @uri.host).to_s.sub(/\A\[(.*)\]\z/, '\1')
+  end
+
+  def resolve_ip(host)
+    host = host.to_s.sub(/\A\[(.*)\]\z/, '\1')
+    ip = begin
+      IPAddr.new(host)
+    rescue StandardError
+      nil
+    end
+    return ip.to_s if ip
+
+    Timeout.timeout($HTTP_OPEN_TIMEOUT, defined?(Net::OpenTimeout) ? Net::OpenTimeout : Timeout::Error) do
+      Resolv.getaddress(host)
+    end
+  end
+
   def open_url(options)
     begin
-      # Skip DNS resolution for .onion domains
-      if @uri.host.end_with?('.onion')
-        # For .onion domains, we'll use the hostname directly
-        @ip = @uri.host
+      # Skip DNS for .onion (and when a proxy will resolve the name)
+      if peer_hostname.end_with?('.onion') || $USE_PROXY == true
+        @ip = peer_hostname
       else
-        @ip = Resolv.getaddress(@uri.host)
+        @ip = resolve_ip(peer_hostname)
       end
     rescue StandardError => err
       raise err
@@ -294,9 +311,9 @@ class Target
 
     begin
       if $USE_PROXY == true
-        http = ExtendedHTTP::Proxy($PROXY_HOST, $PROXY_PORT, $PROXY_USER, $PROXY_PASS).new(@uri.host, @uri.port)
+        http = ExtendedHTTP::Proxy($PROXY_HOST, $PROXY_PORT, $PROXY_USER, $PROXY_PASS).new(peer_hostname, @uri.port)
       else
-        http = ExtendedHTTP.new(@uri.host, @uri.port)
+        http = ExtendedHTTP.new(peer_hostname, @uri.port)
       end
 
       # set timeouts

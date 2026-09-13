@@ -75,8 +75,10 @@ module WhatWeb
         # this might miss redirects from final targets
 
         # more defensive than comparing against max_threads
-        alive = workers.map { |worker| worker if worker.alive? }.compact.length
+        alive = workers.count(&:alive?)
         break if alive == @target_queue.num_waiting && @target_queue.empty?
+
+        sleep 0.05
       end
 
       # Shut down workers, logging, and plugins
