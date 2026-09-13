@@ -21,12 +21,8 @@ class LoggingMagicTreeXML < Logging
     # use sort_by so that & is before &quot;, etc.
     @substitutions.sort_by { |a, _| a == '&' ? 0 : 1 }.map { |from, to| text.gsub!(from, to) }
 
-    # Encode all special characters
-    # More info: http://www.asciitable.com/
-    r = /[^\x20-\x5A\x5E-\x7E]/
-
-    # based on code for CGI.escape
-    text.gsub!(r) { |x| "%#{x.unpack('H2' * x.size).join('%').upcase}" }
+    # ASCII controls only; do not percent-encode UTF-8 (upstream #317)
+    text.gsub!(/[\x00-\x08\x0B\x0C\x0E-\x1F]/) { |x| "%#{x.unpack('H2').first.upcase}" }
     text
   end
 
