@@ -31,8 +31,7 @@ matches [
 passive do
     m=[]
     # Header check (case-insensitive key lookup)
-    server_header = @headers['server'] || @headers['Server']
-    header_match  = server_header.to_s.include?('Webs')
+    header_match = @headers['server'].to_s.match?(/\AWebs\z/i)
 
     # Body check – look for the exact JS string
     body_match = @body.to_s.include?('window.location.href = "./doc/page/login.asp?_"')
