@@ -250,7 +250,12 @@ class Target
         if section =~ /^set-cookie$/i
           @cookies << pageheaders[k].scan(/:[\s]*(.+)$/).flatten.first
         else
-          @headers[section] = pageheaders[k].scan(/:[\s]*(.+)$/).flatten.first
+          value = pageheaders[k].scan(/:[\s]*(.+)$/).flatten.first
+          if @headers.key?(section)
+            @headers[section] = "#{@headers[section]}, #{value}"
+          else
+            @headers[section] = value
+          end
         end
       end
       @headers['set-cookie'] = @cookies.join("\n") unless @cookies.nil? || @cookies.empty?
