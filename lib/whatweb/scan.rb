@@ -175,6 +175,34 @@ module WhatWeb
       nil
     end
 
+    def ipv6_literal?(host)
+      IPAddr.new(host.to_s.sub(/\A\[(.*)\]\z/, '\1')).ipv6?
+    rescue StandardError
+      false
+    end
+
+    # Wrap an IPv6 host in brackets so Addressable/URI can parse it.
+    # 2001:db8::1/foo → [2001:db8::1]/foo
+    # 2001:db8::1:8080 is treated as IPv6:port when the prefix is a valid IPv6 address.
+    def bracket_ipv6_target(s)
+      return s if s.start_with?('[')
+
+      host, path = s.split('/', 2)
+      port = nil
+      unless ipv6_literal?(host)
+        if host =~ /\A(.+):(\d+)\z/ && ipv6_literal?(Regexp.last_match(1))
+          host = Regexp.last_match(1)
+          port = Regexp.last_match(2)
+        else
+          return s
+        end
+      end
+
+      wrapped = "[#{host}]"
+      wrapped += ":#{port}" if port
+      path ? "#{wrapped}/#{path}" : wrapped
+    end
+
     #
     # Make Target List
     #
@@ -261,9 +289,7 @@ module WhatWeb
           #
           # check for URI prefix
           if x !~ %r{^[a-z]+://}
-            # IPv6 literals contain colons; wrap them so they are not treated as host:port
-            ipv6 = x.count(':') >= 2 && x !~ %r{/}
-            x = "[#{x}]" if ipv6 && !x.start_with?('[')
+            x = bracket_ipv6_target(x)
 
             # Dual-scan HTTP+HTTPS only when there is no path and no explicit port.
             # [2001:db8::1]:8080 has colons but is not a "simple hostname".

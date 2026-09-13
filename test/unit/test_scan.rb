@@ -90,6 +90,11 @@ class WhatWebTest < Minitest::Test
     refute(targets.any? { |u| u.start_with?('https://') })
   end
 
+  def test_unbracketed_ipv6_with_path_is_wrapped
+    targets = targets_for('2001:db8::1/foo')
+    assert(targets.any? { |u| u.include?('[2001:db8::1]') && u.include?('/foo') }, targets.inspect)
+  end
+
   def test_bracketed_ipv6_without_port_is_dual_scanned
     targets = targets_for('[::1]')
     assert(targets.any? { |u| u.start_with?('http://[::1]') })
