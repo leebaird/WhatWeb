@@ -10,14 +10,15 @@ authors [
   "Andrew Horton",
   # v0.2 # removed :certainty=>100
   # v0.3 # 2014-08-22 # Remove newlines in title, give warning when newlines are found.
+  # v0.4 # Decode HTML entities in the title (upstream #203).
 ]
-version "0.3"
+version "0.4"
 description "The HTML page title"
 
 passive do
 	m=[]
  	if @body =~ /<title>[^<]+<\/title>/i
-		title=@body.scan(/<title>([^<]+)<\/title>/i)[0][0]
+		title = decode_html_entities(@body.scan(/<title>([^<]+)<\/title>/i)[0][0])
 
 		# Give warining if title element contains newline(s)
 		if title.include? "\n"

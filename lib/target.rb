@@ -28,8 +28,9 @@ def open_target(url)
 end
 
 def decode_html_entities(s)
-  html_entities = { '&quot;' => '"', '&apos;' => "'", '&amp;' => '&', '&lt;' => '<', '&gt;' => '>' }
-  s.gsub( /#{html_entities.keys.join("|")}/, html_entities)
+  return s if s.nil?
+
+  CGI.unescapeHTML(s.to_s)
 end
 
 ### matching
