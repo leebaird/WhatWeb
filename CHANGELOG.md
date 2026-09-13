@@ -474,7 +474,7 @@ Version 0.4.6 Released March 25th 2011
 * Changed $ANEMONE_SKIP_REGEX=Regexp.union line to be compatible with Ruby 1.8.6. Thanks to Michal Ambroz
 * Added plugin reporting support for  :model=>, :firmware=>, :module=>
 * Added --wait SECONDS between connections. Combine with -t 1 if preferred.
-* Added meta-refresh redirect support. eg. <meta http-equiv="refresh" content="0;url=../default/mail/index.html">. Only for non-spidering
+* Added meta-refresh redirect support. eg. `<meta http-equiv="refresh" content="0;url=../default/mail/index.html">`. Only for non-spidering
 * Added {:version=>/regexp/, :offset} to remove cargo cult programming. eg.
 {:version=>/<meta name="Generator" (content|CONTENT)="(ASPNUKE|ASP-Nuke) ([^->"]+)/, :offset=>2,  :name=>"meta generator tag" }
 * Replaced :probability with :certainty in my-plugins/plugin-template.rb.txt. Thanks Erik Inge Bolsø
