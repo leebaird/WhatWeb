@@ -19,6 +19,16 @@ class ExtendedHTTP < Net::HTTP #:nodoc:
   
   SSL_ATTRIBUTES = [ :verify_mode ]
 
+  def apply_client_cert!(ssl_context)
+    return unless defined?($CLIENT_CERT_FILE) && $CLIENT_CERT_FILE
+
+    ssl_context.cert = OpenSSL::X509::Certificate.new(File.read($CLIENT_CERT_FILE))
+    ssl_context.key  = OpenSSL::PKey.read(File.read($CLIENT_KEY_FILE), $CLIENT_KEY_PASS)
+  rescue StandardError => e
+    warn "ERROR loading client certificate/key: #{e.message}"
+    raise
+  end
+
   # Creates a new Net::HTTP object for the specified server address,
   # without opening the TCP connection or initializing the HTTP session.
   # The +address+ should be a DNS hostname or IP address.
@@ -110,6 +120,7 @@ class ExtendedHTTP < Net::HTTP #:nodoc:
       # Now establish SSL over the tunneled connection
       @ssl_context = OpenSSL::SSL::SSLContext.new
       @ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      apply_client_cert!(@ssl_context)
       
       # Configure SSL context for maximum compatibility with ALL protocols
       begin
@@ -167,6 +178,7 @@ class ExtendedHTTP < Net::HTTP #:nodoc:
       # Direct SSL connection (no proxy)
       @ssl_context = OpenSSL::SSL::SSLContext.new
       @ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      apply_client_cert!(@ssl_context)
       
       # Configure SSL context for maximum compatibility with ALL protocols
       begin

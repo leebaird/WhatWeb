@@ -1,3 +1,30 @@
+Unreleased (leebaird fork)
+
+Incorporated working open PRs from urbanadventurer/WhatWeb:
+
+## FEATURES
+* Client certificate (mTLS) support via --client-cert / --client-key / --client-key-pass (#436, @Brunine)
+* Bundler vendor/bundle gem detection, without requiring Bundler at runtime (#435, @tamersp25)
+
+## FIXES
+* make install PREFIX on macOS now defaults to /usr/local (#430, @jmechnich)
+
+## NEW PLUGINS
+* Ubiquiti UniFi (#422, @johndekroon)
+* Proxmox Backup Server (#434, @pawal)
+
+## PLUGIN UPDATES
+* QNAP-NAS newer UI redirect fingerprint (#424, @johndekroon)
+* HikVision passive detection for newer models (#425, @johndekroon)
+* Synology-DiskStation DSM 7.x version detection (#426, @johndekroon)
+* TP-Link-Router TP-LINK HTTPD server header (#427, @johndekroon)
+* Proxmox-VE current UI / API fingerprints (#434, @pawal)
+
+Not incorporated:
+* #432 replace require_relative with require — would load from $LOAD_PATH/cwd instead of the script directory
+* Remaining open issues that are not PRs
+
+
 Version 0.6.4 - April 3, 2026
 
 ## PERFORMANCE IMPROVEMENTS

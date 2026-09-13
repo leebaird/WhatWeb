@@ -32,6 +32,19 @@
 # You should have received a copy of the GNU General Public License
 # along with WhatWeb.  If not, see <http://www.gnu.org/licenses/>.
 
+# Use gems from vendor/bundle when present (upstream PR #435).
+# Only activate Bundler in that case: a bare `bundler/setup` fails when
+# optional Gemfile groups (mongo, test) are not installed.
+vendor_bundle = File.join(File.expand_path(__dir__), 'vendor', 'bundle')
+if File.directory?(vendor_bundle)
+  begin
+    ENV['BUNDLE_GEMFILE'] ||= File.join(File.expand_path(__dir__), 'Gemfile')
+    require 'bundler/setup'
+  rescue LoadError, StandardError
+    # Bundler is optional; lib/gems.rb still checks required gems.
+  end
+end
+
 $LOAD_PATH.unshift(File.join(File.expand_path(__dir__)), '.')
 
 # Performance profiling infrastructure (Phase 1)
@@ -181,6 +194,12 @@ PERFORMANCE & STABILITY:
 \t\t\t\tmonitoring (slower with high thread counts).
   --output-buffer-size=SIZE\tSet output buffer size. 0=unbuffered,
 \t\t\t\tdefault=auto based on thread count.
+
+CLIENT AUTHENTICATION:
+  --client-cert=FILE\t\tClient SSL certificate (PEM format) for
+\t\t\t\tmutual TLS authentication.
+  --client-key=FILE\t\tClient SSL private key (PEM format).
+  --client-key-pass=PASS\tPassphrase for the client key, if encrypted.
 
 HELP & MISCELLANEOUS:
   --short-help\t\t\tShort usage help.
@@ -380,6 +399,9 @@ opts = GetoptLong.new(
   ['-g', '--grep', GetoptLong::REQUIRED_ARGUMENT],
   ['--open-timeout', GetoptLong::REQUIRED_ARGUMENT],
   ['--read-timeout', GetoptLong::REQUIRED_ARGUMENT],
+  ['--client-cert', GetoptLong::REQUIRED_ARGUMENT],
+  ['--client-key', GetoptLong::REQUIRED_ARGUMENT],
+  ['--client-key-pass', GetoptLong::REQUIRED_ARGUMENT],
   ['--header', '-H', GetoptLong::REQUIRED_ARGUMENT],
   ['--cookie', '-c', GetoptLong::REQUIRED_ARGUMENT],
   ['--cookie-jar', GetoptLong::REQUIRED_ARGUMENT],
@@ -534,6 +556,16 @@ begin
       $HTTP_OPEN_TIMEOUT = arg.to_i
     when '--read-timeout'
       $HTTP_READ_TIMEOUT = arg.to_i
+    when '--client-cert'
+      raise("Client certificate file not found: #{arg}") unless File.readable?(arg)
+
+      $CLIENT_CERT_FILE = arg
+    when '--client-key'
+      raise("Client key file not found: #{arg}") unless File.readable?(arg)
+
+      $CLIENT_KEY_FILE = arg
+    when '--client-key-pass'
+      $CLIENT_KEY_PASS = arg
     when '--wait'
       $WAIT = arg.to_i
     when '-H', '--header'
@@ -616,6 +648,11 @@ end
 # sanity check # Disable colours in Windows environments when set to auto
 if RbConfig::CONFIG['host_os'] =~ /mswin|mingw/
   $use_colour = false unless $use_colour == 'always'
+end
+
+if defined?($CLIENT_CERT_FILE) && $CLIENT_CERT_FILE && $CLIENT_KEY_FILE.to_s.empty?
+  error 'ERROR: --client-cert requires --client-key'
+  exit 1
 end
 
 ### PLUGINS
