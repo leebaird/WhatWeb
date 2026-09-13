@@ -8,6 +8,7 @@ require 'minitest/autorun'
 require 'tmpdir'
 require './lib/whatweb'
 require './lib/messages'
+require './lib/simple_cookie_jar'
 
 class WhatWebTest < Minitest::Test
 
@@ -67,6 +68,25 @@ class WhatWebTest < Minitest::Test
     assert_raises 'No targets selected' do
       WhatWeb::Scan.new([{}])
     end
+  end
+
+  def test_request_headers_do_not_mutate_global_cookie
+    previous_headers = $CUSTOM_HEADERS
+    previous_jar = defined?($COOKIE_JAR) ? $COOKIE_JAR : nil
+    previous_no_cookies = defined?($NO_COOKIES) ? $NO_COOKIES : nil
+    $NO_COOKIES = false
+    $CUSTOM_HEADERS = { 'Cookie' => 'user=1' }
+    $COOKIE_JAR = SimpleCookieJar.new(max_domains: 10)
+    $COOKIE_JAR.add_cookies('session=abc', 'https://example.com')
+
+    headers = Target.new('https://example.com/').request_headers
+    assert_match(/user=1/, headers['Cookie'])
+    assert_match(/session=abc/, headers['Cookie'])
+    assert_equal('user=1', $CUSTOM_HEADERS['Cookie'])
+  ensure
+    $CUSTOM_HEADERS = previous_headers || {}
+    $COOKIE_JAR = previous_jar
+    $NO_COOKIES = previous_no_cookies
   end
 
   def test_parse_proxy_ipv6_bracketed

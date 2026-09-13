@@ -268,6 +268,22 @@ class Target
     raise err
   end
 
+  def request_headers
+    headers = ($CUSTOM_HEADERS || {}).dup
+    return headers unless defined?($COOKIE_JAR) && $COOKIE_JAR && (!defined?($NO_COOKIES) || !$NO_COOKIES)
+
+    jar_cookies = $COOKIE_JAR.cookies_for_request(@uri.to_s)
+    return headers if jar_cookies.nil? || jar_cookies.empty?
+
+    existing = headers['Cookie']
+    headers['Cookie'] = if existing && !existing.empty?
+                          "#{existing}; #{jar_cookies}"
+                        else
+                          jar_cookies
+                        end
+    headers
+  end
+
   def peer_hostname
     (@uri.respond_to?(:hostname) ? @uri.hostname : @uri.host).to_s.sub(/\A\[(.*)\]\z/, '\1')
   end
@@ -298,22 +314,6 @@ class Target
       raise err
     end
 
-    # Merge cookies from jar with user-provided cookies
-    if defined?($COOKIE_JAR) && $COOKIE_JAR && (!defined?($NO_COOKIES) || !$NO_COOKIES)
-      jar_cookies = $COOKIE_JAR.cookies_for_request(@uri.to_s)
-      
-      if jar_cookies
-        existing_cookies = $CUSTOM_HEADERS['Cookie']
-        
-        if existing_cookies && !existing_cookies.empty?
-          # Combine: user cookies take precedence
-          $CUSTOM_HEADERS['Cookie'] = "#{existing_cookies}; #{jar_cookies}"
-        else
-          $CUSTOM_HEADERS['Cookie'] = jar_cookies
-        end
-      end
-    end
-
     begin
       if $USE_PROXY == true
         http = ExtendedHTTP::Proxy($PROXY_HOST, $PROXY_PORT, $PROXY_USER, $PROXY_PASS).new(peer_hostname, @uri.port)
@@ -334,16 +334,17 @@ class Target
       end
 
       getthis = @uri.path + (@uri.query.nil? ? '' : '?' + @uri.query)
+      headers = request_headers
       req = nil
 
       if options[:method] == 'GET'
-        req = ExtendedHTTP::Get.new(getthis, $CUSTOM_HEADERS)
+        req = ExtendedHTTP::Get.new(getthis, headers)
       end
       if options[:method] == 'HEAD'
-        req = ExtendedHTTP::Head.new(getthis, $CUSTOM_HEADERS)
+        req = ExtendedHTTP::Head.new(getthis, headers)
       end
       if options[:method] == 'POST'
-        req = ExtendedHTTP::Post.new(getthis, $CUSTOM_HEADERS)
+        req = ExtendedHTTP::Post.new(getthis, headers)
         req.set_form_data(options[:data])
       end
 
@@ -358,7 +359,7 @@ class Target
       request_details << "Host: #{@uri.host}#{@uri.port != (@uri.scheme == 'https' ? 443 : 80) ? ":#{@uri.port}" : ''}"
       
       # Show custom headers
-      $CUSTOM_HEADERS.each do |key, value|
+      headers.each do |key, value|
         request_details << "#{key}: #{value}"
       end
       
