@@ -261,19 +261,18 @@ module WhatWeb
           #
           # check for URI prefix
           if x !~ %r{^[a-z]+://}
+            # IPv6 literals contain colons; wrap them so they are not treated as host:port
+            ipv6 = x.count(':') >= 2 && x !~ %r{/}
+            x = "[#{x}]" if ipv6 && !x.start_with?('[')
+
             # If target is a simple hostname with no scheme, create both HTTP and HTTPS targets
-            if x !~ %r{/} && x !~ %r{:} # No path separators or ports, likely just a hostname
-              # Store original for informational message
+            if x !~ %r{/} && (ipv6 || x !~ %r{:})
               original_hostname = x.dup
-              # Add HTTPS version
-              https_version = "https://#{x}" 
+              https_version = "https://#{x}"
               push_to_urllist << https_version
-              # add HTTP prefix to current target
               x.sub!(/^/, 'http://')
-              # Provide informational message to user
               debug("Simple hostname detected: #{original_hostname}. Testing both HTTP and HTTPS.")
             else
-              # For more complex paths, just use HTTP prefix as before
               x.sub!(/^/, 'http://')
             end
           end

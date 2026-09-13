@@ -109,8 +109,13 @@ class ExtendedHTTP < Net::HTTP #:nodoc:
       @socket.debug_output = @debug_output
 
       # Send CONNECT request through plain socket
-      buf = "CONNECT #{@address}:#{@port} HTTP/#{HTTPVersion}\r\n"
-      buf << "Host: #{@address}:#{@port}\r\n"
+      # Wrap IPv6 literals so CONNECT [::1]:443 is valid (upstream #94)
+      connect_host = @address.to_s
+      if connect_host.include?(':') && !connect_host.start_with?('[')
+        connect_host = "[#{connect_host}]"
+      end
+      buf = "CONNECT #{connect_host}:#{@port} HTTP/#{HTTPVersion}\r\n"
+      buf << "Host: #{connect_host}:#{@port}\r\n"
 
       if proxy_user
         credential = ["#{proxy_user}:#{proxy_pass}"].pack('m')
