@@ -98,7 +98,7 @@ class ExtendedHTTP < Net::HTTP #:nodoc:
       conn_address = proxy_address
       conn_port    = proxy_port
     else
-      conn_address = address
+      conn_address = (respond_to?(:ipaddr) && ipaddr) || address
       conn_port    = port
     end
 

@@ -319,6 +319,9 @@ class Target
         http = ExtendedHTTP::Proxy($PROXY_HOST, $PROXY_PORT, $PROXY_USER, $PROXY_PASS).new(peer_hostname, @uri.port)
       else
         http = ExtendedHTTP.new(peer_hostname, @uri.port)
+        if @ip && @ip != peer_hostname && http.respond_to?(:ipaddr=)
+          http.ipaddr = @ip
+        end
       end
 
       # set timeouts
