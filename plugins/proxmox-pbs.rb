@@ -25,7 +25,7 @@ matches [
   { :name => "PBS auth marker", :search => "all", :regexp => /PBSAPIToken|PBS\.LoginView|__Host-PBSAuthCookie/, :certainty => 75 },
 
   # Aggressive version detection via the product API.
-  { :url => "/api2/json/version", :status => 200, :version => /"version"\s*:\s*"([^"]+)"/ },
+  { :url => "/api2/json/version", :status => 200, :version => /"version"\s*:\s*"([^"]+)"(?=[^}]*"release"\s*:\s*"[a-z])/ },
 ]
 
 end

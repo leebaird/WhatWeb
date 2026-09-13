@@ -31,7 +31,7 @@ matches [
 
   # Aggressive version detection. This endpoint is product-specific and commonly
   # returns JSON including version/release details.
-  { :url => "/api2/json/version", :status => 200, :version => /"version"\s*:\s*"([^"]+)"/ },
+  { :url => "/api2/json/version", :status => 200, :version => /"version"\s*:\s*"([^"]+)"(?=[^}]*"release"\s*:\s*"\d)/ },
 ]
 
 end
