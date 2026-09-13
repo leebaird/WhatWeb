@@ -8,6 +8,19 @@ Incorporated working open PRs from urbanadventurer/WhatWeb:
 
 ## FIXES
 * make install PREFIX on macOS now defaults to /usr/local (#430, @jmechnich)
+* CHANGELOG meta-refresh example is now fenced Markdown (#413)
+* --input-file reports a missing file instead of "No targets selected" (#382)
+* Declare getoptlong for Ruby 3.4+ (#414)
+* make install skips test/development gems (#388)
+* Locate lib/ when /usr/bin/whatweb is a copy of the launcher (#428, #320)
+* Mix plugin names and file paths in -p (#42)
+* Decode HTML entities in Title output (#203)
+* --colour=auto only colours a TTY (#340)
+* XML logs keep UTF-8 instead of percent-encoding CJK (#317)
+* Enable OpenSSL legacy renegotiation for old TLS devices (#409)
+* Time-bound DNS lookups so NXDOMAIN cannot hang a scan (#315)
+* IPv6 literals in targets and HTTPS CONNECT (#94)
+* Join duplicate headers when reading local HTTP captures (#228)
 
 ## NEW PLUGINS
 * Ubiquiti UniFi (#422, @johndekroon)
@@ -22,7 +35,9 @@ Incorporated working open PRs from urbanadventurer/WhatWeb:
 
 Not incorporated:
 * #432 replace require_relative with require — would load from $LOAD_PATH/cwd instead of the script directory
-* Remaining open issues that are not PRs
+* Packaging-only: AUR (#429), Homebrew (#401), Windows exe (#433)
+* Features: SOCKS5 (#107, #397), WordPress plugin enum (#197), SSL cert dump (#284)
+* --url-pattern (#372) matches the documented %insert% template; not inverted
 
 
 Version 0.6.4 - April 3, 2026
