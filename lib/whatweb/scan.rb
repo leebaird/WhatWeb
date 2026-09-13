@@ -191,13 +191,15 @@ module WhatWeb
       # parse input file
       # read each line as a url, skipping lines that begin with a #
       inputfile = opts[:input_file] || nil
-      if !inputfile.nil? && File.exist?(inputfile)
+      unless inputfile.nil?
+        raise "Input file not found: #{inputfile}" unless File.exist?(inputfile)
+        raise "Input file not readable: #{inputfile}" unless File.readable?(inputfile)
+
         debug("loading input file: #{inputfile}")
-        consecutive_errors = 0
-        total_lines = 0
-        
-        File.open(inputfile).readlines.each(&:strip!).reject { |line| line.start_with?('#') || line.eql?('') }.each do |line|
-          total_lines += 1
+        File.foreach(inputfile) do |line|
+          line = line.to_s.sub(/\A\uFEFF/, '').strip
+          next if line.empty? || line.start_with?('#')
+
           url_list << line
         end
       end

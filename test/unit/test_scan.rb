@@ -5,7 +5,9 @@
 # https://morningstarsecurity.com/research/whatweb
 ##
 require 'minitest/autorun'
+require 'tmpdir'
 require './lib/whatweb'
+require './lib/messages'
 
 class WhatWebTest < Minitest::Test
 
@@ -28,6 +30,22 @@ class WhatWebTest < Minitest::Test
   def test_private_methods
     assert_equal(true, WhatWeb::Scan.private_method_defined?(:prepare_target))
     assert_equal(true, WhatWeb::Scan.private_method_defined?(:make_target_list))
+  end
+
+  def test_missing_input_file
+    err = assert_raises(RuntimeError) do
+      WhatWeb::Scan.new([], input_file: '/tmp/whatweb-missing-targets-does-not-exist.txt')
+    end
+    assert_match(/Input file not found/, err.message)
+  end
+
+  def test_input_file_targets
+    path = File.join(Dir.tmpdir, "whatweb-targets-#{Process.pid}.txt")
+    File.write(path, "# comment\nexample.com\n\n")
+    scanner = WhatWeb::Scan.new([], input_file: path)
+    assert(scanner)
+  ensure
+    File.delete(path) if path && File.exist?(path)
   end
 
   def test_invalid_url
