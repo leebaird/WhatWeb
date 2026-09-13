@@ -39,6 +39,15 @@ def yellow(text)
   colorize(text, "\e[1m\e[33m")
 end
 
+# $use_colour: 'always', 'auto' (default), or false/'never'
+# auto → colour only when the stream is a TTY (upstream #340)
+def use_colour?(io = STDOUT)
+  return true if $use_colour == 'always'
+  return false unless $use_colour == 'auto'
+
+  io.respond_to?(:tty?) && io.tty?
+end
+
 def dark_yellow(text)
   colorize(text, "\e[33m")
 end

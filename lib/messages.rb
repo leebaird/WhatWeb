@@ -29,8 +29,7 @@ def error(s)
   return if $NO_ERRORS
 
   $semaphore.reentrant_synchronize do
-    # TODO: make use_color smart, so it detects a tty
-    STDERR.puts((($use_colour == 'auto') || ($use_colour == 'always')) ? red(s) : s)
+    STDERR.puts(use_colour?(STDERR) ? red(s) : s)
     # REMOVED: STDERR.flush for better performance
     $LOG_ERRORS.out(s) if $LOG_ERRORS
   end
@@ -43,7 +42,7 @@ def warning(s)
   return if $NO_ERRORS || $QUIET
 
   $semaphore.reentrant_synchronize do
-    STDERR.puts((($use_colour == 'auto') || ($use_colour == 'always')) ? yellow(s) : s)
+    STDERR.puts(use_colour?(STDERR) ? yellow(s) : s)
     # REMOVED: STDERR.flush for better performance
     $LOG_ERRORS.out("WARNING: #{s}") if $LOG_ERRORS
   end
@@ -56,7 +55,7 @@ def notice(s)
   return if $QUIET
 
   $semaphore.reentrant_synchronize do
-    STDERR.puts((($use_colour == 'auto') || ($use_colour == 'always')) ? blue(s) : s)
+    STDERR.puts(use_colour?(STDERR) ? blue(s) : s)
     # REMOVED: STDERR.flush for better performance
   end
 end
@@ -68,7 +67,7 @@ def debug(s)
   return unless $verbose && $verbose > 2
 
   $semaphore.reentrant_synchronize do
-    STDERR.puts((($use_colour == 'auto') || ($use_colour == 'always')) ? grey("[DEBUG] #{s}") : "[DEBUG] #{s}")
+    STDERR.puts(use_colour?(STDERR) ? grey("[DEBUG] #{s}") : "[DEBUG] #{s}")
     # REMOVED: STDERR.flush for better performance
   end
 end

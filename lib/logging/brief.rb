@@ -38,7 +38,7 @@ class LoggingBrief < Logging
       # colour the output
       # be more DRY
       # if plugins have categories or tags this would be better, eg. all hash plugins are grey
-      if (@f == STDOUT && $use_colour == 'auto') || ($use_colour == 'always')
+      if use_colour?(@f)
         coloured_string = grey(string)
         coloured_string = cyan(string) if plugin_name == 'HTTPServer'
         coloured_string = yellow(string) if plugin_name == 'Title'
@@ -83,7 +83,7 @@ class LoggingBrief < Logging
 
     status_code = HTTP_Status.code(status)
 
-    if (@f == STDOUT && $use_colour == 'auto') || ($use_colour == 'always')
+    if use_colour?(@f)
       brief_results_final = "#{blue(target)} [#{status} #{status_code}] #{brief_results.join(', ')}"
     else
       brief_results_final = "#{target} [#{status} #{status_code}] #{brief_results.join(', ')}"

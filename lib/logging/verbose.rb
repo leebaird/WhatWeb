@@ -1,7 +1,7 @@
 
 class LoggingVerbose < Logging
   def coloured(s, colour)
-    use_colour = ((@f == STDOUT && $use_colour == 'auto') || ($use_colour == 'always'))
+    use_colour = use_colour?(@f)
     if use_colour
       send colour, s
     else
@@ -84,7 +84,7 @@ class LoggingVerbose < Logging
       filepath = suj[:filepath]
 
       # colour the output
-      if (@f == STDOUT && $use_colour == 'auto') || ($use_colour == 'always')
+      if use_colour?(@f)
         coloured_string = grey(string)
         coloured_string = cyan(string) if plugin_name == 'HTTPServer'
         coloured_string = yellow(string) if plugin_name == 'Title'
