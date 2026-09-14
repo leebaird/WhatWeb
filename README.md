@@ -4,6 +4,7 @@
 
 # WhatWeb - Next generation web scanner
 Developed by Andrew Horton [urbanadventurer](https://github.com/urbanadventurer/) and Brendan Coles [bcoles](https://github.com/bcoles/)
+Updates and improvements by Lee Baird [@discoverscripts](https://github.com/leebaird)
 
 Latest Release: v0.6.4. April 3, 2026
 
@@ -79,6 +80,7 @@ $$$$$$ $$$$$ $$$$  $$$ $$$$  $$$     $$$$     $$$$$$ $$$$$ $$$$$$$$$ $$$$$$$$$'
 
 WhatWeb - Next generation web scanner version 0.6.4.
 Developed by Andrew Horton (urbanadventurer) and Brendan Coles (bcoles)
+Updates and improvements by Lee Baird @discoverscripts.
 Homepage: https://morningstarsecurity.com/research/whatweb
 
 Usage: whatweb [options] <URLs>
